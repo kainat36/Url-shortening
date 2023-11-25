@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>URL Shortener</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="/static/logo.png" type="image/x-icon">
+
+</head>
+<body>
+    <h1><img src="/static/logo.png" alt="Logo" class="logo"> URL Shortener</h1>
+    <form action="/" method="POST">
+        <label for="long_url">Long URL:</label>
+        <input type="text" name="long_url" id="long_url">
+        <br>
+        <label for="customize">Customize Code:</label>
+        <input type="text" name="customize" id="customize"><br>
+        <br>
+        <button type="submit" value="Create Link">Generate</button>
+        <button type="reset">Reset</button><br>
+       </form>
+
+    <br>
+    <h2>Shortened URLs</h2>
+    <table align="j">
+        <tr>
+            <th>Short Code</th>
+            <th>Long URL</th>
+            <th>Test URL</th>
+            <th>QR Code</th>
+            <th>Delete URL</th>
+        </tr>
+        {% for url in urls %}
+        <tr>
+            <td>{{ url.short_url }}</td>
+            <td>{{ url.long_url }}</td>
+            <td><a href="/test-url/{{ url.short_url }}">Test URL</a></td>
+            <td>
+                <button onclick="generateQRCode('{{ url.short_url }}')">Generate QR Code</button>
+                <div id="qrcode-{{ url.short_url }}"></div> <!-- Placeholder for QR code -->
+            </td>
+            <td><button onclick="deleteURL('{{ url.id }}')">Delete</button></td>
+        </tr>
+        {% endfor %}
+    </table>
+<script>
+        function deleteURL(id) {
+            fetch('/delete/' + id, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('URL deleted successfully');
+                        location.reload();
+                    } else {
+                        alert('Failed to delete URL');
+                    }
+                });
+        }
+       function generateQRCode(short_url) {
+            // Fetch the QR code from the server
+            fetch('/generate-qr/' + short_url)
+                .then(response => response.blob())
+                .then(data => {
+                    // Create a URL for the blob and display the QR code image
+                    const url = URL.createObjectURL(data);
+                    const qrCodeContainer = document.getElementById('qrcode-' + short_url);
+                    qrCodeContainer.innerHTML = '<img src="' + url + '" alt="QR Code">';
+                });
+        }
+    </script>
+</body>
+</html>
